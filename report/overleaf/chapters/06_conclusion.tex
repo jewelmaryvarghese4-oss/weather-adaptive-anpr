@@ -1,0 +1,47 @@
+\chapter{Conclusion and Future Work}
+\label{ch:conclusion}
+
+\section{Conclusion}
+
+A weather-adaptive ANPR pipeline has been built and tested up to real-time
+plate reading. The YOLOv11n detector reached a mAP@50 of 99.2\,\% on more than
+15\,000 plate images. EasyOCR read only 16.5--25.2\,\% of plates exactly in fog,
+so it was replaced by LPRNet, whose character error fell from 0.70 to 0.249
+after synthetic pre-training and training on real plates, and whose exact-plate
+rate was raised further with public Indian plates, degradation training,
+repeated-character plates and labelled real-video crops (38 to 41 of 51 plates
+on six unseen videos). The real-time pipeline runs at up to 55 frames per second
+on 1080p video and read 10 of 12 plates exactly on an unseen 4K traffic video.
+
+For restoration, CLAHE was the fastest and most dependable of the first three
+methods, and a Mamba-based network (UVMNet), trained in stages on traffic haze,
+plate crops and real-fog pairs, gave much cleaner fog-free pictures. A
+physics-guided procedure that uses the network only to measure the fog gives
+the most natural pictures. A study of 60 real photographs taken at Ponmudi
+showed, however, that none of these dehazers raised the number of plates read
+beyond the level of a weather-trained reader on the untouched photographs, and
+that combining several frames of the same vehicle is the effective lever. A
+lightweight deraining network reached 29.19~dB on synthetic rain, but its effect
+on real rain and on plate reading is not yet established.
+
+The remaining errors are shortened repeated digits, plates from other states,
+and small, blurred or faded plates. The vehicle database, alerts, dashboard,
+dispatch and multi-node correlation are still to be built.
+
+\section{Future Work}
+
+\begin{itemize}
+  \item Build the central system of Phase~2: vehicle database and status
+        classification, real-time dashboard and alerts, dispatch by
+        road-network distance, and multi-node correlation
+        (Chapter~\ref{ch:phase2}).
+  \item Port the node to a Jetson-class module and measure latency, memory and
+        power; decide where the UVMNet-based restorer runs.
+  \item Evaluate deraining and the weather router on real rain and night video,
+        comparing plate reading with and without restoration.
+  \item Collect and label more footage in fog, rain and at night, and use
+        higher-resolution cameras for two-wheeler and auto plates, which are
+        too small to read at present.
+  \item Use multi-frame fusion in the live loop for vehicles whose vote share is
+        low, and extend the format decoder to more state series.
+\end{itemize}

@@ -1,0 +1,9 @@
+subset,version,avg_confidence,num_scored,num_no_text
+full,Clear ground truth,0.5168672798474593,1584,384
+full,Hazy (untouched),0.5019082983200001,1320,648
+full,Dehazed (DCP baseline),0.5196126131322362,1332,636
+full,"Dehazed (DCP + glare-aware, v2)",0.5173086515474723,1329,639
+glare_heavy,Clear ground truth,0.5731631034696127,306,34
+glare_heavy,Hazy (untouched),0.5515955941777132,280,60
+glare_heavy,Dehazed (DCP baseline),0.5701225642068969,283,57
+glare_heavy,"Dehazed (DCP + glare-aware, v2)",0.553652952561861,279,61

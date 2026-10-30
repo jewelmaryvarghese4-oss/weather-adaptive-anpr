@@ -1,0 +1,9 @@
+torch
+torchvision
+pillow
+numpy
+# only for photos (plate detection):
+ultralytics
+opencv-python
+# only for training:
+tqdm

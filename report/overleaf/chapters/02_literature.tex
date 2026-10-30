@@ -1,0 +1,117 @@
+\chapter{Literature Review}
+\label{ch:lit}
+
+An ANPR system chains four problems: finding the plate in the frame, restoring
+a plate that the weather has degraded, reading its characters, and making a
+decision from many frames rather than one. This chapter reviews the work that
+the project builds on for each of them.
+
+\section{Plate Detection}
+
+Early plate locators used edge density, colour and morphology to find the
+bright rectangle of a plate; they work on frontal, well-lit vehicles but fail
+on tilted plates, clutter and bad weather. Modern systems treat the plate as an
+object class for a single-stage detector. The YOLO family predicts boxes and
+class scores in one pass over the image~\cite{redmon2016yolo}, which gives the
+speed needed for video. YOLOv11~\cite{jocher2024yolo11} refines the backbone
+with C3k2 blocks and is offered in sizes from the nano model upwards; the nano
+variant is small enough for embedded hardware, and this is the detector used in
+the project. Large plate datasets such as CCPD~\cite{xu2018ccpd} and the
+RodoSol-ALPR set~\cite{laroca2022rodosol} show that detection of plates is
+largely a solved problem in good conditions; the open questions are small
+plates and degraded images.
+
+\section{Plate Recognition}
+
+General-purpose scene-text readers such as EasyOCR~\cite{jaided2020easyocr}
+segment an image into text lines and recognise them with a recurrent network.
+They are trained on signs and documents, not on plates, and in our experiments
+they confuse plate characters (\plate{1}/\plate{I}, \plate{7}/\plate{Z}) and
+fail on small, blurred plates. Plate-specific readers avoid explicit character
+segmentation. LPRNet~\cite{zherzdev2018lprnet} is a compact convolutional
+network that maps a plate crop to a sequence of per-column character
+probabilities and is trained with the Connectionist Temporal Classification
+(CTC) loss~\cite{graves2006ctc}, which sums over all alignments between the
+column sequence and the target string. It reads the whole plate in one pass, is
+small, and needs no recurrent layer, which makes it
+suitable for real-time and embedded use. Its weakness, shared by all CTC
+models, is that repeated characters need an intervening blank and are easily
+shortened, and that it can only read what the training data contained.
+Public plate datasets are dominated by Chinese and Brazilian plates, so
+Indian-plate performance depends on self-collected or small public sets.
+
+\section{Weather Restoration}
+
+\subsection{Haze and fog}
+
+Haze formation is described by the atmospheric scattering
+model~\cite{narasimhan2002vision}
+\begin{equation}
+  I(x) = J(x)\,t(x) + A\,\bigl(1 - t(x)\bigr), \qquad t(x) = e^{-\beta d(x)},
+  \label{eq:fog}
+\end{equation}
+where $I$ is the observed image, $J$ the clear scene, $t$ the transmission,
+$A$ the atmospheric light, $\beta$ the scattering coefficient and $d$ the
+distance of the point from the camera. Dehazing is the problem of recovering
+$J$ from $I$ alone.
+
+The \emph{Dark Channel Prior} of He \etal~\cite{he2011dcp} estimates $A$ and
+$t$ from the observation that in haze-free outdoor patches at least one colour
+channel is close to zero. It needs no training and works on light, uneven haze,
+but its assumption fails on dense, uniform fog, where the whole frame, including
+the subject, is veiled. \emph{CLAHE}~\cite{zuiderveld1994clahe} equalises the
+histogram tile by tile with a clip limit; it contains no haze model, is very
+fast, and can raise local contrast, but it cannot restore detail that was
+never captured. The \emph{guided filter}~\cite{he2013guided} is an edge-preserving
+smoother used here both to refine transmission maps and to clean network
+output.
+
+Learned dehazing networks are trained on pairs of hazy and clear images.
+Large synthetic sets such as RESIDE~\cite{li2019reside} and Foggy
+Cityscapes~\cite{sakaridis2018foggy} are generated from clear images with
+Equation~\eqref{eq:fog} and a depth map, while NH-HAZE~\cite{ancuti2020nhhaze}
+provides a small number of real, non-homogeneous fog pairs captured with a
+fog machine. State space models, and in particular
+Mamba~\cite{gu2023mamba}, process an image as a sequence with linear
+complexity; UVM-Net~\cite{zheng2024uvmnet} places Mamba blocks in a U-shaped
+encoder--decoder and reports strong dehazing at a moderate cost. UVM-Net is
+the network (UVMNet) used in this project. Depth estimators such as Depth
+Anything~V2~\cite{yang2024depthanythingv2} make it possible to generate
+synthetic fog with realistic depth dependence from any clear photograph,
+which we use in Section~\ref{sec:depthfog}.
+
+A recurring finding in the literature and in our own work is the
+\emph{synthetic-to-real gap}: networks trained on synthetic fog score high
+PSNR on synthetic test sets but may leave real fog untouched or introduce
+colour casts, and PSNR gains do not automatically translate into better
+recognition by a downstream reader.
+
+\subsection{Rain}
+
+Rain adds streaks, spray and glare. Recent deraining networks use multi-scale
+and implicit representations; NeRD-Rain~\cite{chen2024nerdrain}
+exchanges information between coarse and fine scales and is used here as a
+pretrained comparison baseline. NAFNet~\cite{chen2022nafnet} showed that a
+simple baseline without nonlinear activations can match far more complex
+restoration networks and is a design reference for lightweight models. As with
+fog, deraining is trained on synthetic rain, and real rain also contains road
+splash, wet-surface sheen and lens drops that synthetic streaks do not model.
+
+\section{Multi-Frame Evidence}
+
+A moving vehicle appears in many frames, each a slightly different view of the
+same plate. Reading the plate in every frame and taking a vote, or aligning
+the plate crops and combining them, uses this redundancy. Image alignment with
+the enhanced correlation coefficient criterion~\cite{evangelidis2008ecc} gives
+sub-pixel registration of crops under affine motion, after which the crops can
+be averaged to reduce noise. Tracking plates across frames also lets the system
+announce each vehicle once instead of once per frame.
+
+\section{Summary}
+
+The literature supports the design adopted here: a small single-stage detector,
+a CTC-based plate reader trained on Indian plates, a learned dehazing network
+for fog and a lightweight network for rain, and voting over frames for
+reliability. It also identifies the open problems that Phase~1 addresses:
+dehazing that helps recognition and not only appearance, readers that
+generalise to Indian plate layouts, and a real-time implementation.

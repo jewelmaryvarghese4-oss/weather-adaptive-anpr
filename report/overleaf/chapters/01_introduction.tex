@@ -1,0 +1,113 @@
+\chapter{Introduction}
+\label{ch:intro}
+
+Vehicle registration numbers are the main way to identify a vehicle at a
+checkpoint or a traffic junction, and Automatic Number Plate Recognition (ANPR)
+systems read them automatically from camera images. Checking plates by hand is
+slow and cannot keep up with traffic, so police, toll and parking operators
+increasingly rely on cameras that read the plate, look the number up in a
+database and raise an alert when a vehicle is stolen, blacklisted or missing
+its documents.
+
+Most ANPR systems are designed and tested in clear daylight. Outdoors they meet
+haze, fog, rain, glare and low contrast, which blur the plate characters and
+break the assumptions on which detectors and character readers were trained. In
+our own tests a general-purpose OCR engine read only 16.5--25.2\,\% of plates
+exactly in fog and 5.9--11.0\,\% in rain. Kerala makes the problem concrete:
+the monsoon brings months of rain, and the hill roads around Ponmudi are in
+dense fog for much of the day, yet these are exactly the conditions in which
+vehicle checks are most needed. A dependable system therefore has to restore
+degraded images, read plates in real time as vehicles pass, and cope with
+Indian plate formats, which include one-line and two-line layouts, white,
+yellow and red plates, and many state and series codes.
+
+This project develops a \emph{Weather Adaptive ANPR System}. Each camera node
+detects plates with YOLOv11, restores weather-degraded frames, and reads the
+plate with a recognition network trained on Indian plates. The registration
+number is then checked against a central vehicle database and the vehicle is
+classified as authorised, non-compliant, unauthorised, blacklisted or stolen.
+Alerts appear on a real-time dashboard, and sightings from several camera nodes
+are correlated to detect convoy movement and route anomalies. Each node is
+designed to run on embedded hardware of the Jetson class.
+
+\section{Problem Statement}
+
+Plate recognition in the field fails in three connected ways. First, the
+\emph{image} is degraded: fog lowers contrast and adds a veil of scattered
+light, rain adds streaks and spray, and low light adds noise. Second, the
+\emph{plate} is small: a plate on a vehicle ten to twenty metres away may be
+only 25--40 pixels wide, and two-line plates on two-wheelers and autos are
+smaller still. Third, the \emph{reader} is brittle: a network trained on clean
+plates misreads the characters it has not seen blurred, repeated digits are
+dropped, and letters such as \plate{Q}, \plate{O} and \plate{0} are confused.
+The system must handle all three while still running fast enough to show a
+plate the moment the vehicle passes.
+
+\section{Objectives}
+
+The main objectives of the project are as follows.
+\begin{enumerate}
+  \item \textbf{Restoration.} Capture frames and restore plates degraded by
+        haze, rain or low contrast so that they stay readable.
+  \item \textbf{Detection and recognition.} Detect plates and recognise the
+        registration number in real time, with format validation and
+        multi-frame confirmation.
+  \item \textbf{Verification.} Verify each plate against a central vehicle
+        database and classify it as authorised, non-compliant, unauthorised,
+        blacklisted or stolen.
+  \item \textbf{Alerts and dispatch.} Raise instant alerts on a real-time
+        dashboard (vehicle details, image, timestamp) and forward stolen or
+        blacklisted vehicles to a dispatch module.
+  \item \textbf{Correlation.} Correlate sightings across camera nodes to find
+        convoy movement, route anomalies and loitering, and answer
+        movement-history queries.
+\end{enumerate}
+Objectives 1 and 2 are the subject of Phase~1 and of this report. Objectives 3
+to 5, together with embedded deployment, make up Phase~2 (Chapter~\ref{ch:phase2}).
+
+\section{Scope of Phase 1}
+
+Phase~1 delivers the vision core of the system, \ie\ everything that turns a
+camera frame into a confirmed registration number:
+\begin{itemize}
+  \item the YOLOv11 plate detector (Section~\ref{sec:yolo});
+  \item the weather restoration stage: dehazing with a Mamba-based network,
+        its physics-guided extension and a CLAHE route for low contrast, and
+        a lightweight deraining network (Section~\ref{sec:restoration});
+  \item the LPRNet plate reader with format-constrained decoding
+        (Section~\ref{sec:lprnet});
+  \item tracking, voting and the real-time pipeline, with tests on unseen
+        traffic videos and on foggy video from Ponmudi
+        (Sections~\ref{sec:realtime} and~\ref{sec:video}).
+\end{itemize}
+
+\section{Contributions}
+
+The main results of Phase~1 are the following.
+\begin{itemize}
+  \item A plate detector with 99.2\,\% mAP@50 and a plate reader that was
+        taken from 0.70 to 0.249 character error rate through synthetic
+        pre-training, public data and self-labelled Indian plates, and from
+        38 to 41 of 51 exact plates on six unseen videos through two rounds of
+        labelled real-video crops.
+  \item A real-time pipeline that confirms each plate by voting over frames and
+        runs at up to 55 frames per second on 1080p video on a laptop GPU.
+  \item A fog-removal network (UVMNet) trained and fine-tuned for plates and
+        real fog, and a physics-guided procedure that uses the network only to
+        \emph{measure} the fog and then removes it from the real photograph
+        by inverting the scattering law.
+  \item A controlled study on 60 real foggy photographs showing that, with a
+        weather-trained reader, better-looking dehazing does not by itself
+        raise the number of plates read, whereas combining frames of the same
+        vehicle does.
+  \item A lightweight deraining network and an evaluation on synthetic and real
+        rain.
+\end{itemize}
+
+\section{Organisation of the Report}
+
+Chapter~\ref{ch:lit} reviews the relevant literature. Chapter~\ref{ch:design}
+describes the system architecture and the camera node. Chapter~\ref{ch:phase1}
+presents the implementation and results of Phase~1. Chapter~\ref{ch:phase2}
+lists the work planned for Phase~2, and Chapter~\ref{ch:conclusion} concludes
+the report. Appendix~\ref{app:env} lists the datasets and software used.

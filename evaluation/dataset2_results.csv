@@ -1,0 +1,7 @@
+subset,version,avg_confidence,num_scored,num_no_text
+full,Hazy (untouched),0.33239562982644416,1001,0
+full,Dehazed (DCP baseline),0.339297973571867,1000,1
+full,"Dehazed (DCP + glare-aware, v2)",0.339297973571867,1000,1
+glare_heavy,Hazy (untouched),0.33239562982644416,1001,0
+glare_heavy,Dehazed (DCP baseline),0.339297973571867,1000,1
+glare_heavy,"Dehazed (DCP + glare-aware, v2)",0.339297973571867,1000,1

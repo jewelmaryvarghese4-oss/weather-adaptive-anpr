@@ -1,0 +1,221 @@
+% ======================================================================
+%  Front matter: cover, certificate, declaration, abstract,
+%  acknowledgement, contents, lists, abbreviations
+% ======================================================================
+\pagenumbering{gobble}
+
+% ---------------------------- cover page -----------------------------
+\begin{titlepage}
+\centering
+\setstretch{1.15}
+{\Large\bfseries\ReportTitle\par}
+\vspace{1.4cm}
+{\large\itshape A Project Report\par}
+\vspace{0.3cm}
+{\itshape Submitted to the APJ Abdul Kalam Technological University\\
+in partial fulfillment of requirements for the award of degree\par}
+\vspace{0.5cm}
+{\large\bfseries\itshape Bachelor of Technology\par}
+\vspace{0.2cm}
+{\itshape in\par}
+\vspace{0.2cm}
+{\large\bfseries\itshape Electronics and Communication Engineering\par}
+\vspace{0.2cm}
+{\itshape by\par}
+\vspace{0.4cm}
+{\large\bfseries
+AUXLIYA MARIYA (TRV23EC020)\\[3pt]
+JEWEL MARY VARGHESE (TRV23EC030)\\[3pt]
+MEGHA T S (TRV23EC039)\\[3pt]
+SILPA C R (TRV23EC066)\par}
+\vspace{1.3cm}
+\includegraphics[width=3.6cm]{college_emblem.png}\par
+\vfill
+{\bfseries\small
+DEPARTMENT OF ELECTRONICS AND COMMUNICATION ENGINEERING\\
+GOVERNMENT ENGINEERING COLLEGE BARTON HILL\\
+KERALA\\
+\ReportDate\par}
+\end{titlepage}
+
+% ---------------------------- certificate ----------------------------
+\newpage
+\thispagestyle{empty}
+\begin{center}
+{\bfseries
+DEPT.\ OF ELECTRONICS \& COMMUNICATION ENGINEERING\\
+GOVERNMENT ENGINEERING COLLEGE BARTON HILL TRIVANDRUM\\
+\AcademicYear\par}
+\vspace{0.4cm}
+\includegraphics[width=2.8cm]{college_emblem.png}\par
+\vspace{0.6cm}
+{\bfseries CERTIFICATE\par}
+\end{center}
+\vspace{0.2cm}
+\noindent
+This is to certify that the report entitled \textbf{\ReportTitle} submitted by
+\textbf{AUXLIYA MARIYA} (TRV23EC020), \textbf{JEWEL MARY VARGHESE} (TRV23EC030),
+\textbf{MEGHA T S} (TRV23EC039) and \textbf{SILPA C R} (TRV23EC066) to the
+APJ Abdul Kalam Technological University in partial fulfillment of the
+requirement for B.Tech.\ degree in Electronics and Communication Engineering is
+a bonafide record of the project work carried out by them under our guidance
+and supervision. This report in any form has not been submitted to any other
+University or Institute for any purpose.
+
+\vspace{1.0cm}
+\noindent
+\begin{tabular}{@{}p{0.31\textwidth}@{\hspace{0.02\textwidth}}p{0.31\textwidth}@{\hspace{0.02\textwidth}}p{0.31\textwidth}@{}}
+\textbf{Project Guide} & \textbf{Project Coordinator} & \textbf{Project Coordinator}\\[1.6cm]
+% TODO(confirm): guide designation; coordinators/HOD copied from the
+% October 2026 RIS reference report - confirm they are the same for this batch.
+Prof.\ Usha Anand\newline Dept.\ of ECE, GECBH &
+Dr.\ Sanil K Daniel\newline Professor\newline Dept.\ of ECE, GECBH &
+Dr.\ Jeena R S\newline Professor\newline Dept.\ of ECE, GECBH\\[1.2cm]
+ & \textbf{Head of Department} & \\[1.6cm]
+ & Dr.\ Nelsa Abraham\newline Professor and HOD\newline Dept.\ of ECE, GECBH &
+\end{tabular}
+
+% ---------------------------- declaration ----------------------------
+\newpage
+\thispagestyle{empty}
+\begin{center}{\bfseries DECLARATION}\end{center}
+\vspace{0.3cm}
+\noindent
+We hereby declare that the project report \textbf{\ReportTitle}, submitted for
+partial fulfillment of the requirements for the award of degree of Bachelor of
+Technology of the APJ Abdul Kalam Technological University, Kerala is a
+bonafide work done by us under supervision of Prof.\ Usha Anand.
+
+This submission represents our ideas in our own words and where ideas or words
+of others have been included, we have adequately and accurately cited and
+referenced the original sources.
+
+We also declare that we have adhered to ethics of academic honesty and
+integrity and have not misrepresented or fabricated any data or idea or fact or
+source in our submission. We understand that any violation of the above will be
+a cause for disciplinary action by the institute and/or the University and can
+also evoke penal action from the sources which have thus not been properly
+cited or from whom proper permission has not been obtained. This report has
+not previously formed the basis for the award of any degree, diploma or
+similar title of any other University.
+
+\vspace{1.2cm}
+\noindent Trivandrum\\
+\DeclarationDate
+
+\vspace{1.2cm}
+\begin{flushright}
+AUXLIYA MARIYA\\[4pt]
+JEWEL MARY VARGHESE\\[4pt]
+MEGHA T S\\[4pt]
+SILPA C R
+\end{flushright}
+
+% ---------------------------- abstract -------------------------------
+\clearpage
+\pagenumbering{roman}
+\setcounter{page}{1}
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+Automatic Number Plate Recognition (ANPR) is widely used for vehicle
+verification at checkpoints and traffic points, but manual checking is slow
+and recognition accuracy drops sharply in haze, fog, rain and low contrast.
+This project presents a Weather Adaptive ANPR System that detects,
+restores, recognises and verifies vehicle registration numbers from camera
+feeds in real time. Each camera node captures frames and restores them to
+improve plate readability under degraded conditions. A YOLOv11 detector
+locates the plate, a plate-specific LPRNet reads the characters, and the
+reading is normalised with Indian plate-format rules. The recognised number is
+then to be compared with a central vehicle database holding registration,
+insurance, pollution-certificate, stolen and blacklist status, and each vehicle
+classified as authorised, non-compliant, unauthorised, blacklisted or stolen,
+with alerts shown on a real-time dashboard and sightings from several camera
+nodes correlated to detect convoy movement, route anomalies and loitering.
+
+This report covers Phase~1, the vision core of the system. The YOLOv11n
+plate detector reaches a mAP@50 of 99.2\,\% on 15\,000 plate images. For
+restoration, Dark Channel Prior, a transformer network and CLAHE were first
+compared; a Mamba-based U-shaped network (UVMNet) was then trained for fog
+removal and extended with a physics-guided step that inverts the fog
+scattering law on the real photograph. A lightweight deraining network
+for rain was also developed. For recognition, a general-purpose OCR read only
+16.5--25.2\,\% of plates exactly in fog, so it was replaced by LPRNet, which was
+trained in stages on synthetic, public and self-labelled Indian plates and
+combined with format-constrained decoding. Tracking and voting over frames
+give a real-time pipeline that runs at up to 55 frames per second on 1080p
+video and reads 10 of 12 plates exactly on an unseen 4K traffic video.
+A study of 60 real fog photographs taken at Ponmudi shows that, once the
+reader is trained for weather, further dehazing improves how the picture looks
+but not how many plates are read: combining several frames of the same vehicle
+is what helps. The vehicle database, alert dashboard, dispatch module,
+multi-node correlation and embedded deployment form Phase~2.
+
+% ---------------------------- acknowledgement ------------------------
+\clearpage
+\chapter*{Acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgement}
+
+We take this opportunity to express our deepest sense of gratitude and sincere
+thanks to everyone who helped us to complete this work successfully. We express
+our sincere thanks to Dr.\ Nelsa Abraham, Head of Department, Electronics and
+Communication Engineering, Government Engineering College Barton Hill for
+providing us with all the necessary facilities and support.
+
+We would like to express our sincere gratitude to Dr.\ Sanil K Daniel and
+Dr.\ Jeena R S, Department of Electronics and Communication Engineering,
+Government Engineering College Barton Hill, Trivandrum, for their support and
+cooperation.
+
+We would like to place on record our sincere gratitude to our project guide
+Prof.\ Usha Anand, Electronics and Communication Engineering, Government
+Engineering College Barton Hill, for the guidance and mentorship throughout
+this work.
+
+Finally, we thank our families and friends who contributed to the successful
+fulfilment of this project work.
+
+\vspace{1cm}
+\begin{flushright}
+AUXLIYA MARIYA\\[4pt]
+JEWEL MARY VARGHESE\\[4pt]
+MEGHA T S\\[4pt]
+SILPA C R
+\end{flushright}
+
+% ---------------------------- contents and lists ---------------------
+\clearpage
+\tableofcontents
+\clearpage
+\addcontentsline{toc}{chapter}{List of Figures}
+\listoffigures
+\clearpage
+\addcontentsline{toc}{chapter}{List of Tables}
+\listoftables
+
+% ---------------------------- abbreviations --------------------------
+\clearpage
+\chapter*{List of Abbreviations}
+\addcontentsline{toc}{chapter}{List of Abbreviations}
+\begin{tabular}{@{}p{3.2cm}p{11cm}@{}}
+ANPR   & Automatic Number Plate Recognition\\
+CER    & Character Error Rate\\
+CLAHE  & Contrast Limited Adaptive Histogram Equalisation\\
+CNN    & Convolutional Neural Network\\
+CTC    & Connectionist Temporal Classification\\
+DCP    & Dark Channel Prior\\
+ECC    & Enhanced Correlation Coefficient (image alignment)\\
+EMA    & Exponential Moving Average\\
+GPU    & Graphics Processing Unit\\
+LPRNet & License Plate Recognition Network\\
+mAP    & mean Average Precision\\
+NMS    & Non-Maximum Suppression\\
+OCR    & Optical Character Recognition\\
+PSNR   & Peak Signal-to-Noise Ratio\\
+RTO    & Regional Transport Office\\
+SSIM   & Structural Similarity Index\\
+SSM    & State Space Model\\
+UVMNet & U-shaped Vision Mamba Network\\
+YOLO   & You Only Look Once\\
+\end{tabular}
+\clearpage

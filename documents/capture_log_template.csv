@@ -1,0 +1,4 @@
+car_id,plate_text,date,time,condition,test_car,photo_files,video_file,notes
+C001,KL01AB1234,2026-11-02,10:15,clear,no,IMG_0001.jpg;IMG_0002.jpg;IMG_0003.jpg;IMG_0004.jpg;IMG_0005.jpg,VID_0001.mp4,example row - white hatchback single line plate
+C001,KL01AB1234,2026-11-02,11:40,dense fog,no,IMG_0101.jpg;IMG_0102.jpg;IMG_0103.jpg;IMG_0104.jpg;IMG_0105.jpg,VID_0010.mp4,same car and same tripod spot as the clear shots
+C002,KL16P6?73,2026-11-02,10:22,clear,yes,IMG_0006.jpg;IMG_0007.jpg;IMG_0008.jpg;IMG_0009.jpg;IMG_0010.jpg,VID_0002.mp4,one character unsure (marked ?) - test car

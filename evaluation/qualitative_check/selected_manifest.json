@@ -1,0 +1,122 @@
+[
+  {
+    "file": "00_dehazed_only_ok_crop_0032_v1.jpg",
+    "category": "dehazed_only_ok",
+    "filename": "crop_0032_v1.jpg",
+    "gt_text": "700V",
+    "hazy_text": "IWI",
+    "hazy_conf": 0.5233535215909371,
+    "hazy_match": false,
+    "dehazed_text": "700V",
+    "dehazed_conf": 0.2071225792169571,
+    "dehazed_match": true
+  },
+  {
+    "file": "01_both_fail_crop_0170_v7.jpg",
+    "category": "both_fail",
+    "filename": "crop_0170_v7.jpg",
+    "gt_text": "MMN306",
+    "hazy_text": "M",
+    "hazy_conf": 0.992932810113448,
+    "hazy_match": false,
+    "dehazed_text": "M",
+    "dehazed_conf": 0.9992521015983904,
+    "dehazed_match": false
+  },
+  {
+    "file": "02_both_fail_crop_0215_v4.jpg",
+    "category": "both_fail",
+    "filename": "crop_0215_v4.jpg",
+    "gt_text": "TN37CS2765",
+    "hazy_text": "TN3765",
+    "hazy_conf": 0.5823980989105251,
+    "hazy_match": false,
+    "dehazed_text": "TN37",
+    "dehazed_conf": 0.9959091544151306,
+    "dehazed_match": false
+  },
+  {
+    "file": "03_both_fail_crop_0035_v2.jpg",
+    "category": "both_fail",
+    "filename": "crop_0035_v2.jpg",
+    "gt_text": "BATMAN",
+    "hazy_text": "HH",
+    "hazy_conf": 0.23475252017485948,
+    "hazy_match": false,
+    "dehazed_text": "I",
+    "dehazed_conf": 0.99040282870968,
+    "dehazed_match": false
+  },
+  {
+    "file": "04_both_fail_crop_0025_v1.jpg",
+    "category": "both_fail",
+    "filename": "crop_0025_v1.jpg",
+    "gt_text": "WMY9051",
+    "hazy_text": "LYU",
+    "hazy_conf": 0.028772405548845345,
+    "hazy_match": false,
+    "dehazed_text": "WHGV",
+    "dehazed_conf": 0.2571524977684021,
+    "dehazed_match": false
+  },
+  {
+    "file": "05_both_fail_crop_0012_v4.jpg",
+    "category": "both_fail",
+    "filename": "crop_0012_v4.jpg",
+    "gt_text": "YES8055",
+    "hazy_text": "VESHHS",
+    "hazy_conf": 0.20956152574702042,
+    "hazy_match": false,
+    "dehazed_text": "VESH",
+    "dehazed_conf": 0.2532918453216553,
+    "dehazed_match": false
+  },
+  {
+    "file": "06_both_fail_crop_0023_v3.jpg",
+    "category": "both_fail",
+    "filename": "crop_0023_v3.jpg",
+    "gt_text": "DL7CN5617",
+    "hazy_text": "UHM",
+    "hazy_conf": 0.19971900471536752,
+    "hazy_match": false,
+    "dehazed_text": "IH",
+    "dehazed_conf": 0.2473102173014418,
+    "dehazed_match": false
+  },
+  {
+    "file": "07_both_fail_crop_0129_v4.jpg",
+    "category": "both_fail",
+    "filename": "crop_0129_v4.jpg",
+    "gt_text": "IMACAR",
+    "hazy_text": "",
+    "hazy_conf": 0.0,
+    "hazy_match": false,
+    "dehazed_text": "",
+    "dehazed_conf": 0.0,
+    "dehazed_match": false
+  },
+  {
+    "file": "08_both_fail_crop_0247_v1.jpg",
+    "category": "both_fail",
+    "filename": "crop_0247_v1.jpg",
+    "gt_text": "5H799",
+    "hazy_text": "",
+    "hazy_conf": 0.0,
+    "hazy_match": false,
+    "dehazed_text": "",
+    "dehazed_conf": 0.0,
+    "dehazed_match": false
+  },
+  {
+    "file": "09_both_fail_crop_0247_v5.jpg",
+    "category": "both_fail",
+    "filename": "crop_0247_v5.jpg",
+    "gt_text": "5H799",
+    "hazy_text": "",
+    "hazy_conf": 0.0,
+    "hazy_match": false,
+    "dehazed_text": "",
+    "dehazed_conf": 0.0,
+    "dehazed_match": false
+  }
+]

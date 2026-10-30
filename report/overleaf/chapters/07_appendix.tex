@@ -1,0 +1,62 @@
+\chapter{Datasets, Software and Work Log}
+\label{app:env}
+
+\section{Datasets Used}
+
+\begin{table}[h]
+\centering
+\caption{Datasets used in Phase 1.}
+\small
+\begin{tabularx}{\textwidth}{@{}p{3.6cm}Xp{3.6cm}@{}}
+\toprule
+\textbf{Dataset} & \textbf{Use} & \textbf{Size}\\
+\midrule
+Licence-plate detection set & Training and validation of the YOLOv11n detector & 15\,000+ images\\
+Foggy-Hazy License Plates & Real paired hazy/clear plate photographs; dehazing tests and training & 1\,001 pairs\\
+UVM traffic haze set (Foggy Cityscapes) & UVMNet stage A & 8\,925 pairs\\
+RESIDE-OTS & UVMNet stage C & 15\,198 hazy files\\
+NH-HAZE & Real fog pairs, oversampled in stage C & 53 pairs\\
+GoPro clear frames & Source of clear images for synthetic fog & ---\\
+Ponmudi photographs & Real fog test set, 85 verified plates & 60 photographs\\
+Ponmudi videos & Foggy-video pipeline and frame fusion & 4 clips\\
+CCPD & Plate reader training (subset) & 40\,000 of 355\,013 images\\
+Zenodo plate set & Plate reader training & about 1\,355 pairs\\
+Self-labelled Kerala plates & Plate reader training and held-out test & 16 held-out plates\\
+Traffic videos (sets 14, 15) & Real-video crops for the reader; test videos kept out of training & 114 + 93 plates labelled\\
+Rajasthan hazy subset & Reader training and restoration test & 250 photographs\\
+RodoSol-ALPR & Clean images for deraining training & ---\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Software and Hardware}
+
+Python with PyTorch, the Ultralytics YOLO package (YOLOv11), OpenCV, the
+\code{mamba-ssm} package with its CUDA kernel (UVMNet) and Depth Anything~V2
+(depth-aware fog) were used on Windows~11 with WSL2 (Ubuntu), on a laptop with an
+NVIDIA RTX~4060 GPU with 8\,GB of memory. Training on this GPU used mixed
+precision, $384\times384$ crops and, where needed, exponential-moving-average
+weights.
+
+\section{Work Log}
+
+\begin{table}[h]
+\centering
+\caption{Summary of the work done in Phase 1.}
+\small
+\begin{tabularx}{\textwidth}{@{}p{1.6cm}X@{}}
+\toprule
+\textbf{Weeks} & \textbf{Work done}\\
+\midrule
+1--4 & Topic selection, literature survey, study of the pipeline, set-up of Python, PyTorch, YOLO, OpenCV and EasyOCR.\\
+5--6 & Plate detection dataset, first YOLO11n training (mAP@50 0.931), plate cropping and baseline OCR.\\
+7--10 & Transformer dehazing network and synthetic fog generator, training (21.76 to 22.68~dB), OCR-based validation.\\
+11 & Comparison of DCP, CLAHE and the neural network on 20 foggy images; evaluation harness with 210 labelled plates; Mamba variants.\\
+12--13 & UVMNet on traffic haze data; colour-cast diagnosis; plate fine-tuning; multi-dataset training (27.30~dB); low-light variants.\\
+14 & CLAHE dispatcher, wrap-up of the defogging stage; failure of EasyOCR; LPRNet built and trained on synthetic and real plates.\\
+15 & Real Indian plates: format-constrained decoding, Kerala photographs, Zenodo set, degradation training.\\
+16 & Video reader, real-time pipeline, detector fine-tune, real-video training rounds, browser interface.\\
+17+ & Real-fog study at Ponmudi: real-fog UVMNet training, physics-guided dehaze, depth-aware fog, multi-frame fusion, foggy-video pipeline; deraining networks.\\
+\bottomrule
+\end{tabularx}
+\end{table}

@@ -1,0 +1,30 @@
+# model weights and checkpoints (large; kept out of the repository)
+*.pt
+*.pth
+*.onnx
+*.ckpt
+checkpoints*/
+
+# data and outputs
+datasets/
+finalin/
+finalout/
+runs/
+runs_ft/
+app_runs*/
+live_runs/
+*.mp4
+*.mov
+*.MOV
+*.avi
+*.zip
+
+# environments and caches
+venv/
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# local tool state
+.claude/

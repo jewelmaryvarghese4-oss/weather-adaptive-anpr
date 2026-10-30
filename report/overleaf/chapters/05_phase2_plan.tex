@@ -1,0 +1,89 @@
+\chapter{Phase 2 Plan}
+\label{ch:phase2}
+
+Phase~1 delivered the camera-node vision core. Phase~2 builds the central
+system that turns confirmed plates into decisions and moves the node onto
+embedded hardware. The work packages below follow the objectives of
+Chapter~\ref{ch:intro}.
+
+\section{Work Packages}
+
+\subsection{Vehicle verification}
+
+A central database will hold, for each registration, the registration status,
+insurance, pollution certificate, stolen and blacklist status, and previous
+sightings. Each recognised plate is looked up and the vehicle classified as
+\emph{authorised}, \emph{non-compliant} (for example an expired document),
+\emph{unauthorised}, \emph{blacklisted} or \emph{stolen}. Because the reader can
+make a one-character error, the lookup will also return near matches with the
+reading confidence so that an operator can confirm doubtful cases.
+
+\subsection{Alerts and dispatch}
+
+A real-time dashboard will show the vehicle details, the captured image and the
+timestamp, with an administrative interface for managing the database and
+users. Stolen and blacklisted vehicles are forwarded to a dispatch module that
+finds the nearest available response officer by road-network distance.
+
+\subsection{Multi-node correlation}
+
+Each sighting is stored with its camera node and time. Queries over the stored
+sightings will detect convoy movement (vehicles seen together at several
+nodes), route anomalies (a vehicle at a node it should not reach in the time
+available) and loitering, and will answer retroactive queries for the movement
+history of a plate.
+
+\subsection{Embedded deployment}
+
+Detection, restoration and recognition will be ported to the Jetson Nano-class
+node. The tests are: end-to-end alert latency from the vehicle passing to the
+alert on the dashboard; memory and speed of the UVMNet-based restorer on the
+chosen module (the Mamba kernel requires an NVIDIA GPU); and field tests in
+clear weather, rain and fog, including night operation with the NoIR camera and
+IR illuminator.
+
+\subsection{Completing the weather stage}
+
+Three items of Phase~1 remain open: the effect of deraining on plate detection
+and reading in real rain (comparing detection rate, character-level accuracy and
+complete-plate rate on the same samples before and after restoration), routing
+of frames to the restoration models by a weather classifier in the live loop,
+and more labelled footage from fog, rain and night, since labelled real
+footage was the data that moved the reader most.
+
+\section{Evaluation Plan}
+
+Table~\ref{tab:eval} lists the measures with which the complete system will be
+evaluated.
+
+\begin{table}[t]
+\centering
+\caption{Planned evaluation of the complete system.}
+\label{tab:eval}
+\small
+\begin{tabularx}{\textwidth}{@{}lXl@{}}
+\toprule
+\textbf{Measure} & \textbf{Definition} & \textbf{Condition}\\
+\midrule
+Plate recognition rate & Plates read exactly / plates passing & clear, fog, rain, night\\
+Restoration benefit & Change in recognition rate with and without restoration & fog, rain\\
+Correlation accuracy & Correct convoy / anomaly / loitering decisions & multi-node\\
+Alert latency & Time from the vehicle passing to the alert shown & node and network\\
+Node load & Frames per second, memory and power on the node & Jetson module\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Risks}
+
+\begin{itemize}
+  \item \textbf{Reading accuracy.} Small, blurred plates and non-Kerala series
+        are read less reliably; the database lookup and operator confirmation
+        must tolerate single-character errors.
+  \item \textbf{Embedded speed.} UVMNet is large (116.2 million parameters)
+        and needs the CUDA Mamba kernel; if it is too slow on the node, the
+        restoration can run only on frames flagged as foggy, or on a central
+        GPU.
+  \item \textbf{Data.} Public Indian plate data are exhausted for our purpose;
+        further gains need self-collected labelled footage.
+\end{itemize}

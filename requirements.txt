@@ -1,0 +1,20 @@
+# Core (plate detection + reading + dehazing)
+torch
+torchvision
+numpy
+pillow
+opencv-python
+ultralytics          # YOLOv11 plate detector
+tqdm
+scikit-image
+imageio-ffmpeg       # annotated video writing
+
+# UVMNet with the real Mamba kernel (Linux / WSL2 + NVIDIA GPU, CUDA 11.6+)
+# causal-conv1d>=1.1.0
+# mamba-ssm
+
+# Only for the OCR baselines and the report/slide helpers
+# easyocr
+# python-docx
+# python-pptx
+# lxml

@@ -1,0 +1,5 @@
+total scored: 120
+both OK: 0
+dehazed-only OK (dehazing fixed it): 1
+hazy-only OK (dehazing broke it / regression): 0
+both fail: 119

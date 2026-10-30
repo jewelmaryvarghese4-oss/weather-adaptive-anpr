@@ -1,0 +1,163 @@
+\chapter{System Design}
+\label{ch:design}
+
+\section{Requirements and Specifications}
+
+The system must read plates in fog, rain and low contrast, work in real time as
+vehicles pass, handle Indian plate formats, and run on an embedded node at each
+camera. It is evaluated on recognition accuracy (clear and degraded
+conditions), the effectiveness of the restoration stage, the accuracy of
+multi-node correlation and the end-to-end alert latency. Table~\ref{tab:specs}
+lists the design values.
+
+\begin{table}[t]
+\centering
+\caption{System specifications (design values).}
+\label{tab:specs}
+\small
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+\textbf{Parameter} & \textbf{Design value}\\
+\midrule
+Pipeline & Capture $\rightarrow$ plate detection $\rightarrow$ weather restoration $\rightarrow$ plate reading $\rightarrow$ verification and alerts\\
+Plate detector & YOLOv11n, trained on 15\,000+ annotated licence-plate images\\
+Weather restoration & CLAHE for low contrast; UVMNet with physics-guided fog removal for fog; lightweight U-Net deraining for rain\\
+Plate reader & LPRNet with CTC, $200\times24$ input, characters A--Z and 0--9, Indian plate-format rules\\
+Confirmation & Tracking plus voting over frames: announced after 5 or more agreeing reads, or on exit for short passes\\
+Edge hardware & Jetson Nano-class module, HDR / STARVIS-class camera, NoIR plate camera with IR illuminator\\
+Records and alerts & Central vehicle database and multi-node correlation (Phase 2)\\
+Development platform & Python and PyTorch on WSL2, NVIDIA RTX 4060 laptop GPU (8\,GB)\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{System Architecture}
+
+The system has two layers (Figure~\ref{fig:arch}). The \emph{camera node}
+captures video and turns it into confirmed registration numbers locally; only
+the recognised results, with a crop of the plate and a timestamp, are sent
+onwards. The \emph{central system} verifies each number against the vehicle
+database, raises alerts, forwards urgent cases to dispatch, and correlates
+sightings from all nodes. Phase~1 covers the camera node.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[node distance=7mm and 7mm]
+  % camera node
+  \node[blk] (cam) {Camera\\capture};
+  \node[blk,right=of cam] (det) {Plate detection\\YOLOv11n};
+  \node[blk,right=of det] (res) {Weather\\restoration};
+  \node[blk,right=of res] (rd) {Plate reading\\LPRNet + rules};
+  \node[blk,below=9mm of rd] (trk) {Tracking and\\voting};
+  \draw[arr] (cam) -- (det);
+  \draw[arr] (det) -- (res);
+  \draw[arr] (res) -- (rd);
+  \draw[arr] (rd) -- (trk);
+  \begin{scope}[on background layer]
+    \node[draw=blk,dashed,rounded corners=3pt,fit=(cam)(det)(res)(rd)(trk),
+          inner sep=7pt,label={[lbl]above left:CAMERA NODE (Phase 1)}] (nodebox) {};
+  \end{scope}
+  % central system
+  \node[org,below=34mm of cam] (db) {Vehicle\\database};
+  \node[org,right=of db] (cls) {Status\\classification};
+  \node[org,right=of cls] (dash) {Dashboard\\and alerts};
+  \node[org,right=of dash] (disp) {Dispatch\\module};
+  \node[org,below=7mm of cls,minimum width=36mm] (corr) {Multi-node\\correlation};
+  \draw[arr] (trk.south) -- ++(0,-6mm) -| ([xshift=4mm]cls.north)
+        node[lbl,pos=0.2,above,xshift=9mm] {plate, crop, time};
+  \draw[arr] (db) -- (cls);
+  \draw[arr] (cls) -- (dash);
+  \draw[arr] (dash) -- (disp);
+  \draw[arr] (cls) -- (corr);
+  \begin{scope}[on background layer]
+    \node[draw=orange!70!black,dashed,rounded corners=3pt,
+          fit=(db)(cls)(dash)(disp)(corr),inner sep=7pt,
+          label={[lbl]below left:CENTRAL SYSTEM (Phase 2)}] {};
+  \end{scope}
+\end{tikzpicture}
+\caption{Architecture of the Weather Adaptive ANPR System. The camera node is
+implemented and tested in Phase~1; the central system is planned for Phase~2.}
+\label{fig:arch}
+\end{figure}
+
+\section{Camera Node and Hardware}
+
+Each node has an HDR or STARVIS-class camera for the scene and a NoIR camera
+with an infrared illuminator for plates at night. Detection, restoration and
+recognition run locally on a Jetson Nano-class module with SSD storage in a
+weatherproof enclosure. Local processing keeps the network load small, because
+only recognised results are sent to the central system, and keeps the node
+working if the link is lost.
+
+The platform was chosen with the restoration stage in mind. The first design
+targeted a Raspberry Pi~5, but the Mamba selective-scan kernel used by UVMNet
+is CUDA-only and does not run there; a transformer-only restorer was
+therefore built for the Pi and later replaced by UVMNet once a CUDA-capable
+embedded target was chosen. Whether the final network meets the latency budget
+on the Jetson module is one of the Phase~2 tests.
+
+\section{Software Pipeline}
+
+The pipeline is written in Python with PyTorch and the Ultralytics YOLO
+package, OpenCV for image handling, and runs on WSL2 with an NVIDIA RTX~4060
+laptop GPU during development. Figure~\ref{fig:pipeline} shows the processing
+of one frame.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[node distance=6mm and 6mm]
+  \node[blk] (frame) {Frame};
+  \node[blk,right=of frame] (route) {Weather\\check};
+  \node[grn,above right=4mm and 9mm of route] (clahe) {CLAHE\\(low contrast)};
+  \node[grn,right=9mm of route] (uvm) {UVMNet +\\physics (fog)};
+  \node[grn,below right=4mm and 9mm of route] (rain) {Deraining\\(rain)};
+  \node[blk,right=44mm of route] (yolo) {YOLOv11n\\plate boxes};
+  \node[blk,below=8mm of yolo] (crop) {Crop,\\flatten 2-line};
+  \node[blk,left=of crop] (lpr) {LPRNet\\+ format decode};
+  \node[blk,left=of lpr] (trk) {Track and\\vote};
+  \node[blk,left=of trk] (out) {Confirmed\\plate};
+  \draw[arr] (frame) -- (route);
+  \draw[arr] (route.east) -- ++(4mm,0) |- (clahe.west);
+  \draw[arr] (route.east) -- (uvm.west);
+  \draw[arr] (route.east) -- ++(4mm,0) |- (rain.west);
+  \draw[arr] (clahe.east) -- ++(5mm,0) |- (yolo.west);
+  \draw[arr] (uvm.east) -- (yolo.west);
+  \draw[arr] (rain.east) -- ++(5mm,0) |- (yolo.west);
+  \draw[arr] (yolo) -- (crop);
+  \draw[arr] (crop) -- (lpr);
+  \draw[arr] (lpr) -- (trk);
+  \draw[arr] (trk) -- (out);
+\end{tikzpicture}
+\caption{Processing of one frame in the camera node. The weather check selects
+the restoration route; plate detection, reading and voting follow. The order of
+restoration and detection can be swapped so that only the plate crop is
+restored.}
+\label{fig:pipeline}
+\end{figure}
+
+Two orders of restoration and detection are supported. In the first the whole
+frame is restored before detection, which gives the clearest picture and is
+used for the foggy-video pipeline of Section~\ref{sec:foggyvideo}. In the
+second the plate is detected first and only its crop is restored and read,
+which is cheaper and is the order of the real-time loop. The reader is given a
+``select'' view that chooses between the plain crop and a smoothed crop, because
+experiments (Section~\ref{sec:ponmudi}) showed that heavy restoration of a
+crop can hurt reading.
+
+\section{Data Handling}
+
+Detections are tracked from frame to frame, and the readings of each track are
+kept in a vote table. A reading is accepted only if it matches an Indian plate
+layout, and a plate is confirmed when at least five reads agree or, for a
+vehicle that is in view only briefly, announced when it leaves the scene if the
+reading is well formed and most reads agree
+(Section~\ref{sec:realtime}). The central system receives the confirmed plate
+number, a crop of the plate, the camera identifier and the time.
+
+\section{Summary}
+
+The design separates a camera node, which turns pixels into confirmed plate
+numbers on embedded hardware, from a central system that verifies, alerts and
+correlates. The weather-dependent part is isolated in a restoration stage that
+is selected by a weather check, so that clear frames are not processed
+unnecessarily and each degradation has its own model.

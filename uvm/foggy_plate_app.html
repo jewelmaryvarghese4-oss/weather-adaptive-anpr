@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foggy Plate Reader</title>
+<style>
+:root {
+  --bg: #f4f5f7; --panel: #ffffff; --panel2: #f9fafb; --line: #e3e6ea; --text: #1c2128; --muted: #6b7380;
+  --accent: #1f6feb; --accent-soft: #e8f0fe; --good: #1a7f37; --good-soft: #e6f4ea; --warn: #b35900;
+  --warn-soft: #fff1e0; --bad: #c62828; --bad-soft: #fdecea; --plate: #fdfdf6; --shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1216; --panel: #171b21; --panel2: #1d2229; --line: #2a3038; --text: #e6e9ee; --muted: #8b94a3;
+    --accent: #4c8dff; --accent-soft: #1b2a44; --good: #3fb950; --good-soft: #15291b; --warn: #f0a04b;
+    --warn-soft: #33240f; --bad: #ff6b6b; --bad-soft: #3a1717; --plate: #f4f4ea; --shadow: none;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 "Segoe UI", system-ui, sans-serif; }
+button, input, select { font: inherit; color: inherit; }
+header { display: flex; align-items: center; gap: 14px; padding: 12px 20px; background: var(--panel);
+  border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+header h1 { font-size: 18px; margin: 0; font-weight: 650; }
+.chip { font-size: 12px; padding: 2px 9px; border-radius: 99px; background: var(--panel2); border: 1px solid var(--line);
+  color: var(--muted); white-space: nowrap; }
+.chip.on { background: var(--good-soft); color: var(--good); border-color: transparent; }
+.spacer { flex: 1; }
+.layout { display: grid; grid-template-columns: 330px 1fr; gap: 18px; padding: 18px 20px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; padding: 12px 16px; } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
+.card + .card { margin-top: 16px; }
+.card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0;
+  padding: 12px 14px 0; font-weight: 600; }
+.pad { padding: 12px 14px 14px; }
+.drop { border: 2px dashed var(--line); border-radius: 10px; padding: 18px 12px; text-align: center; cursor: pointer;
+  transition: border-color .15s, background .15s; }
+.drop.over, .drop:hover { border-color: var(--accent); background: var(--accent-soft); }
+.drop b { display: block; font-size: 15px; margin-bottom: 4px; }
+.drop small { color: var(--muted); }
+.btn { border: 1px solid var(--line); background: var(--panel2); border-radius: 7px; padding: 6px 12px; cursor: pointer; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.btn.primary:disabled { opacity: .45; cursor: default; }
+.btn.danger { color: var(--bad); }
+.btn.small { padding: 3px 9px; font-size: 13px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.files { list-style: none; margin: 10px 0 0; padding: 0; max-height: 170px; overflow: auto; }
+.files li { display: flex; gap: 8px; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.files li .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.files li .sz { color: var(--muted); font-size: 12px; }
+.files li button { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 0 4px; }
+.opt { margin-top: 12px; }
+.opt label.t { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.seg button { flex: 1; border: 0; background: var(--panel2); padding: 6px 4px; cursor: pointer; font-size: 13px; }
+.seg button.sel { background: var(--accent); color: #fff; }
+.hint { color: var(--muted); font-size: 12px; margin-top: 4px; }
+select, input[type=text], input[type=search] { width: 100%; padding: 6px 8px; border: 1px solid var(--line);
+  border-radius: 7px; background: var(--panel2); }
+details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-top: 12px; }
+.bar { height: 6px; background: var(--panel2); border-radius: 9px; overflow: hidden; border: 1px solid var(--line); }
+.bar > div { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+.msg { font-size: 13px; margin-top: 8px; }
+.msg.err { color: var(--bad); }
+.runs { list-style: none; margin: 0; padding: 6px; max-height: 420px; overflow: auto; }
+.runs li { padding: 8px 10px; border-radius: 7px; cursor: pointer; display: flex; gap: 8px; align-items: center; }
+.runs li:hover { background: var(--panel2); }
+.runs li.sel { background: var(--accent-soft); }
+.runs .rn { flex: 1; min-width: 0; }
+.runs .rn div { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.runs .rn small { color: var(--muted); }
+.runs .cnt { font-weight: 650; font-variant-numeric: tabular-nums; }
+.pill { font-size: 11px; padding: 1px 8px; border-radius: 99px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+.pill.running { background: var(--accent-soft); color: var(--accent); }
+.pill.queued { background: var(--panel2); color: var(--muted); }
+.pill.done { background: var(--good-soft); color: var(--good); }
+.pill.stopped { background: var(--warn-soft); color: var(--warn); }
+.pill.error { background: var(--bad-soft); color: var(--bad); }
+.empty { text-align: center; color: var(--muted); padding: 70px 20px; }
+.empty b { display: block; font-size: 18px; color: var(--text); margin-bottom: 6px; }
+.runhead { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 14px 16px; }
+.runhead h3 { margin: 0; font-size: 17px; overflow-wrap: anywhere; }
+.stats { display: flex; gap: 18px; flex-wrap: wrap; padding: 0 16px 12px; color: var(--muted); font-size: 13px; }
+.stats b { color: var(--text); font-variant-numeric: tabular-nums; }
+.videogrid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; padding: 0 16px 16px; }
+@media (max-width: 1200px) { .videogrid { grid-template-columns: 1fr; } }
+.viewer { background: #000; border-radius: 8px; overflow: hidden; aspect-ratio: 16 / 9; display: flex;
+  align-items: center; justify-content: center; position: relative; }
+.viewer img { max-width: 100%; max-height: 100%; display: block; }
+.viewer.sbs { aspect-ratio: 32 / 9; }
+.viewer .ph { color: #8b94a3; text-align: center; padding: 20px; }
+.viewer video { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 760px) { .pair { grid-template-columns: 1fr; } }
+.vlabel { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.vlabel b { color: var(--text); }
+.clock { float: right; font-variant-numeric: tabular-nums; color: var(--text); }
+.videogrid.paired { grid-template-columns: 1fr; }
+.videogrid.paired .plist { max-height: 460px; }
+.latest { display: flex; gap: 14px; align-items: center; margin-top: 12px; padding: 12px 14px; border-radius: 8px;
+  background: var(--panel2); border: 1px solid var(--line); min-height: 76px; }
+.latest .lbl { font-size: 11px; text-transform: uppercase; color: var(--muted); letter-spacing: .05em; }
+.latest img { height: 52px; max-width: 160px; object-fit: contain; border-radius: 4px; background: #000; }
+.plate { font-family: "Consolas", "Cascadia Mono", monospace; font-weight: 700; letter-spacing: .06em;
+  background: var(--plate); color: #111; border: 2px solid #222; border-radius: 6px; padding: 1px 8px; display: inline-block;
+  white-space: nowrap; }
+.latest .plate { font-size: 28px; }
+.plist-head { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.plist-head input { flex: 1; }
+.plist { list-style: none; margin: 0; padding: 0; max-height: 640px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+.plist li { display: grid; grid-template-columns: 110px 1fr; gap: 10px; padding: 9px 10px; border-bottom: 1px solid var(--line);
+  cursor: pointer; align-items: center; }
+.plist li:last-child { border-bottom: 0; }
+.plist li:hover { background: var(--panel2); }
+.plist li.fresh { animation: flash 2.5s ease-out; }
+@keyframes flash { from { background: var(--good-soft); } to { background: transparent; } }
+.plist .crop { width: 110px; height: 44px; object-fit: contain; background: #000; border-radius: 4px; }
+.plist .plate { font-size: 17px; }
+.meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.tag { display: inline-block; font-size: 11px; padding: 0 6px; border-radius: 4px; margin: 3px 4px 0 0; }
+.tag.warn { background: var(--warn-soft); color: var(--warn); }
+.tag.bad { background: var(--bad-soft); color: var(--bad); }
+.tag.info { background: var(--accent-soft); color: var(--accent); }
+.section { padding: 0 16px 16px; }
+.section h4 { margin: 4px 0 4px; font-size: 14px; }
+.section p { margin: 0 0 10px; color: var(--muted); font-size: 13px; }
+.ugrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.ucard { border: 1px solid var(--line); border-radius: 8px; padding: 8px; background: var(--panel2); }
+.ucard img { width: 100%; height: 70px; object-fit: contain; background: #000; border-radius: 4px; }
+.ucard .g { font-family: Consolas, monospace; font-weight: 700; margin-top: 4px; }
+.pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 14px; padding: 0 16px 16px; }
+.ba { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: #000; }
+.ba img { width: 100%; max-height: 300px; object-fit: contain; background: #000; display: block; cursor: zoom-in; }
+.ba .bl { font-size: 11px; color: #cfd6e0; background: #111; padding: 3px 8px; text-transform: uppercase; letter-spacing: .04em; }
+.pcard { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel2); }
+.pcard > img { width: 100%; max-height: 300px; object-fit: contain; background: #000; display: block; cursor: zoom-in; }
+.pcard .nm { padding: 8px 10px 0; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.pcard ul { list-style: none; margin: 0; padding: 6px 10px 10px; }
+.pcard li { display: flex; gap: 10px; align-items: center; padding: 5px 0; }
+.pcard li img { width: 96px; height: 38px; object-fit: contain; background: #000; border-radius: 4px; }
+.pcard li.dim { opacity: .55; }
+.pcard details.others { padding: 0 10px 10px; font-size: 13px; color: var(--muted); }
+.pcard details.others summary { cursor: pointer; margin-bottom: 4px; }
+.pcard details.others ul { padding: 0; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.75); display: none; align-items: center; justify-content: center;
+  z-index: 20; padding: 20px; }
+.modal.open { display: flex; }
+.modal .box { background: var(--panel); border-radius: 10px; max-width: min(1300px, 100%); max-height: 100%; overflow: auto; }
+.modal .box > img { display: block; max-width: 100%; max-height: 72vh; margin: 0 auto; background: #000; }
+.modal .info { display: flex; gap: 14px; align-items: center; padding: 12px 16px; flex-wrap: wrap; }
+.modal .info img { height: 60px; background: #000; border-radius: 4px; }
+.modal .info .plate { font-size: 26px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Foggy Number Plate Reader</h1>
+  <span class="chip" id="modelChip">loading…</span>
+  <span class="chip" id="devChip"></span>
+  <span class="chip on" id="fogChip">fog removal: UVM + physics</span>
+  <span class="spacer"></span>
+  <span class="chip" id="busyChip">idle</span>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="card">
+      <h2>New run</h2>
+      <div class="pad">
+        <div class="drop" id="drop">
+          <b>Drop videos or photos here</b>
+          <small>or click to pick files from your folders</small>
+        </div>
+        <input type="file" id="fileInput" multiple hidden>
+        <input type="file" id="dirInput" webkitdirectory hidden>
+        <div class="row" style="margin-top:8px">
+          <button class="btn small" id="pickFiles">Choose files…</button>
+          <button class="btn small" id="pickDir">Choose a folder of photos…</button>
+        </div>
+        <ul class="files" id="fileList"></ul>
+
+        <div class="opt">
+          <label class="t">Video speed</label>
+          <div class="seg" id="modeSeg">
+            <button data-v="live" class="sel">Live (real time)</button>
+            <button data-v="all">Every frame</button>
+          </div>
+          <div class="hint" id="modeHint"></div>
+        </div>
+        <div class="opt">
+          <label class="t" for="imgsz">Detector size</label>
+          <select id="imgsz">
+            <option value="auto">Auto (1280: best for small plates in fog)</option>
+            <option value="640">640 (fast)</option>
+            <option value="1280">1280 (finds smaller plates, slower)</option>
+          </select>
+        </div>
+        <div class="opt row">
+          <label><input type="checkbox" id="dehaze" checked> Remove the fog first (UVM + physics-guided dehaze)</label>
+        </div>
+        <div class="opt" id="strengthOpt">
+          <label class="t" for="strength">Fog removal strength</label>
+          <select id="strength">
+            <option value="strong">Strong (clearest picture, more vivid colours)</option>
+            <option value="normal">Normal (gentler, more natural colours)</option>
+          </select>
+          <div class="hint" id="fogHint"></div>
+        </div>
+        <div class="opt row">
+          <label><input type="checkbox" id="compare" checked> Also save a side-by-side video (original | fog removed)</label>
+        </div>
+        <div class="opt row">
+          <label><input type="checkbox" id="record" checked> Save the annotated video</label>
+        </div>
+        <details>
+          <summary>…or type a file / folder path instead (no upload, best for very large videos)</summary>
+          <input type="text" id="pathInput" placeholder="C:\projects\jewwww\datasets\dataset15\1.MOV" style="margin-top:6px">
+        </details>
+        <div class="row" style="margin-top:14px">
+          <button class="btn primary" id="startBtn" disabled>Read plates</button>
+          <span class="hint" id="startHint"></span>
+        </div>
+        <div id="upWrap" style="display:none; margin-top:10px">
+          <div class="bar"><div id="upBar"></div></div>
+          <div class="hint" id="upText"></div>
+        </div>
+        <div class="msg" id="msg"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Earlier runs</h2>
+      <ul class="runs" id="runs"></ul>
+    </div>
+  </aside>
+
+  <main class="card" id="main">
+    <div class="empty"><b>Pick a video or photos to start</b>The plates appear here as soon as they are read.</div>
+  </main>
+</div>
+
+<div class="modal" id="modal"><div class="box" id="modalBox"></div></div>
+
+<script>
+const STATES = {AN:"Andaman & Nicobar",AP:"Andhra Pradesh",AR:"Arunachal Pradesh",AS:"Assam",BR:"Bihar",CG:"Chhattisgarh",
+  CH:"Chandigarh",DD:"Dadra & Nagar Haveli and Daman & Diu",DL:"Delhi",DN:"Dadra & Nagar Haveli",GA:"Goa",GJ:"Gujarat",
+  HP:"Himachal Pradesh",HR:"Haryana",JH:"Jharkhand",JK:"Jammu & Kashmir",KA:"Karnataka",KL:"Kerala",LA:"Ladakh",
+  LD:"Lakshadweep",MH:"Maharashtra",ML:"Meghalaya",MN:"Manipur",MP:"Madhya Pradesh",MZ:"Mizoram",NL:"Nagaland",
+  OD:"Odisha",OR:"Odisha",PB:"Punjab",PY:"Puducherry",RJ:"Rajasthan",SK:"Sikkim",TN:"Tamil Nadu",TR:"Tripura",
+  TS:"Telangana",TG:"Telangana",UK:"Uttarakhand",UA:"Uttarakhand",UP:"Uttar Pradesh",WB:"West Bengal"};
+const KL_RTO = {1:"Thiruvananthapuram",2:"Kollam",3:"Pathanamthitta",4:"Alappuzha",5:"Kottayam",6:"Idukki",
+  7:"Ernakulam",8:"Thrissur",9:"Palakkad",10:"Malappuram",11:"Kozhikode",12:"Wayanad",13:"Kannur",14:"Kasaragod",
+  15:"KSRTC",16:"Attingal",17:"Muvattupuzha",18:"Vadakara",19:"Parassala",20:"Neyyattinkara",21:"Nedumangad",
+  22:"Kazhakuttam"};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+                set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+
+function fmtPlate(p) {
+  const m = /^([A-Z]{2})(\d{1,2})([A-Z]{0,3})(\d{1,4})$/.exec(p || "");
+  return m ? [m[1], m[2], m[3], m[4]].filter(Boolean).join(" ") : (p || "?");
+}
+function plateInfo(p) {
+  const m = /^([A-Z]{2})(\d{1,2})/.exec(p || "");
+  if (!m) return { where: "", unknown: false };
+  const st = STATES[m[1]];
+  if (!st) return { where: "", unknown: m[1] };
+  const rto = m[1] === "KL" ? KL_RTO[+m[2]] : null;
+  return { where: rto ? `${st} · ${rto}` : st, unknown: false };
+}
+function fmtSize(b) { return b > 1e9 ? (b / 1e9).toFixed(2) + " GB" : b > 1e6 ? (b / 1e6).toFixed(1) + " MB" : Math.ceil(b / 1e3) + " KB"; }
+const isVideo = f => /^video\//.test(f.type) || /\.(mp4|mov|avi|mkv|m4v|wmv|webm|mpg|mpeg|3gp|ts)$/i.test(f.name);
+const isImage = f => /^image\//.test(f.type) || /\.(jpe?g|png|bmp|webp|tiff?)$/i.test(f.name);
+// a file saved without an extension (e.g. "2"): the server looks at its content to decide what it is
+const noExt = f => !/\.[A-Za-z0-9]+$/.test(f.name);
+
+// ---------------- picking files ----------------
+let picked = [];
+const settings = Object.assign({ mode: "all", imgsz: "auto", record: true, compare: true, dehaze: true, strength: "strong" }, store.get("foggyplateapp.settings", {}));
+function applySettings() {
+  document.querySelectorAll("#modeSeg button").forEach(b => b.classList.toggle("sel", b.dataset.v === settings.mode));
+  $("#modeHint").textContent = settings.mode === "live"
+    ? "Skips frames to keep up with the video. With fog removal on only about 1 frame in 30 is read, so plates are often missed: prefer Every frame."
+    : "Reads every frame: slower than the video (about 1 frame per second with fog removal), but nothing is skipped and the recording shows the de-fogged video.";
+  $("#imgsz").value = settings.imgsz; $("#record").checked = settings.record;
+  $("#compare").checked = settings.compare; $("#dehaze").checked = settings.dehaze; $("#strength").value = settings.strength;
+  $("#strengthOpt").style.display = settings.dehaze ? "" : "none";
+  $("#fogHint").textContent = "Each frame goes through the GoPro-trained UVM and the physics-guided dehaze first (about 1 frame per second on this GPU); the plates are then read on the clear picture.";
+  store.set("foggyplateapp.settings", settings);
+}
+document.querySelectorAll("#modeSeg button").forEach(b => b.onclick = () => { settings.mode = b.dataset.v; applySettings(); });
+$("#imgsz").onchange = e => { settings.imgsz = e.target.value; applySettings(); };
+$("#record").onchange = e => { settings.record = e.target.checked; applySettings(); };
+$("#dehaze").onchange = e => { settings.dehaze = e.target.checked; applySettings(); };
+$("#strength").onchange = e => { settings.strength = e.target.value; applySettings(); };
+$("#compare").onchange = e => { settings.compare = e.target.checked; applySettings(); };
+applySettings();
+
+function addFiles(list) {
+  const skipped = [];
+  for (const f of list) {
+    if (!isVideo(f) && !isImage(f) && !noExt(f)) { skipped.push(f.name); continue; }
+    if (!picked.some(p => p.name === f.name && p.size === f.size)) picked.push(f);
+  }
+  renderPicked();
+  setMsg(skipped.length ? `Skipped ${skipped.length} file(s) that are not videos or photos.` : "");
+}
+function renderPicked() {
+  $("#fileList").innerHTML = picked.map((f, i) =>
+    `<li><span>${isVideo(f) ? "🎞" : "🖼"}</span><span class="nm" title="${esc(f.name)}">${esc(f.name)}</span>
+     <span class="sz">${fmtSize(f.size)}</span><button data-i="${i}" title="Remove">✕</button></li>`).join("");
+  $("#fileList").querySelectorAll("button").forEach(b => b.onclick = () => { picked.splice(+b.dataset.i, 1); renderPicked(); });
+  updateStart();
+}
+function updateStart() {
+  const has = picked.length || $("#pathInput").value.trim();
+  $("#startBtn").disabled = !has || uploading;
+  const v = picked.filter(f => isVideo(f) || (noExt(f) && !isImage(f))).length, p = picked.filter(isImage).length;
+  $("#startHint").textContent = picked.length ? [v && `${v} video${v > 1 ? "s" : ""}`, p && `${p} photo${p > 1 ? "s" : ""}`].filter(Boolean).join(", ") : "";
+}
+$("#drop").onclick = () => $("#fileInput").click();
+$("#pickFiles").onclick = () => $("#fileInput").click();
+$("#pickDir").onclick = () => $("#dirInput").click();
+$("#fileInput").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
+$("#dirInput").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
+$("#pathInput").oninput = updateStart;
+const drop = $("#drop");
+["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => addFiles(e.dataTransfer.files));
+
+function setMsg(t, err) { $("#msg").textContent = t || ""; $("#msg").className = "msg" + (err ? " err" : ""); }
+
+// ---------------- uploading + starting ----------------
+let uploading = false;
+function uploadOne(file, done, total) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/upload");
+    xhr.setRequestHeader("X-File-Name", encodeURIComponent(file.name));
+    xhr.upload.onprogress = e => {
+      const frac = (done + (e.lengthComputable ? e.loaded : 0)) / total;
+      $("#upBar").style.width = (100 * frac).toFixed(1) + "%";
+      $("#upText").textContent = `Copying ${file.name} … ${(100 * frac).toFixed(0)}%`;
+    };
+    xhr.onload = () => { let r = {}; try { r = JSON.parse(xhr.responseText); } catch {}
+      xhr.status === 200 ? resolve(r) : reject(new Error(r.error || `upload failed (${xhr.status})`)); };
+    xhr.onerror = () => reject(new Error("upload failed: is foggy_plate_app.py still running?"));
+    xhr.send(file);
+  });
+}
+$("#startBtn").onclick = async () => {
+  setMsg("");
+  uploading = true; updateStart();
+  const total = picked.reduce((s, f) => s + f.size, 0) || 1;
+  const uploads = [];
+  try {
+    if (picked.length) $("#upWrap").style.display = "";
+    let done = 0;
+    for (const f of picked) { const r = await uploadOne(f, done, total); uploads.push(r.path); done += f.size; }
+    const path = $("#pathInput").value.trim();
+    const res = await fetch("/api/start", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uploads, paths: path ? [path] : [], settings }) });
+    const r = await res.json();
+    if (!res.ok) throw new Error(r.error || "could not start");
+    picked = []; $("#pathInput").value = ""; renderPicked();
+    selected = r.runs[0]; follow = true;
+    setMsg(r.runs.length > 1 ? `${r.runs.length} runs queued; they run one after another.` : "");
+    await refreshRuns(); poll();
+  } catch (e) { setMsg(e.message, true); }
+  uploading = false; $("#upWrap").style.display = "none"; updateStart();
+};
+
+// ---------------- runs list ----------------
+let runs = [], selected = null, follow = true, state = null, shownRun = null, liveOn = false, lastEventCount = -1;
+async function refreshRuns() {
+  try { runs = await (await fetch("/api/runs")).json(); } catch { return; }
+  $("#runs").innerHTML = runs.length ? runs.map(r => `<li data-id="${esc(r.id)}" class="${r.id === selected ? "sel" : ""}">
+      <span>${r.kind === "video" ? "🎞" : "🖼"}</span>
+      <div class="rn"><div title="${esc(r.name)}">${esc(r.name)}</div><small>${esc(r.created)}</small></div>
+      ${r.status === "done" ? `<span class="cnt" title="plates read">${r.plates}</span>` : `<span class="pill ${r.status}">${r.status}</span>`}
+    </li>`).join("") : `<li style="cursor:default;color:var(--muted)">No runs yet</li>`;
+  $("#runs").querySelectorAll("li[data-id]").forEach(li => li.onclick = () => {
+    selected = li.dataset.id; follow = !!(state?.current && state.current.id === selected);
+    lastEventCount = -1; refreshRuns(); showSelected(true);
+  });
+}
+
+// ---------------- polling ----------------
+let pollTimer = null;
+async function poll() {
+  clearTimeout(pollTimer);
+  let s;
+  try { s = await (await fetch("/api/state")).json(); } catch { $("#busyChip").textContent = "server not reachable"; pollTimer = setTimeout(poll, 2000); return; }
+  const wasRunning = state?.current?.id;
+  state = s;
+  $("#modelChip").textContent = "reader: " + s.model;
+  $("#devChip").textContent = s.device.startsWith("cuda") ? "GPU" : "CPU"; $("#devChip").className = "chip" + (s.device.startsWith("cuda") ? " on" : "");
+  const cur = s.current;
+  $("#busyChip").textContent = cur ? `reading: ${cur.name}` + (s.queued.length ? ` (+${s.queued.length} queued)` : "") : "idle";
+  $("#busyChip").className = "chip" + (cur ? " on" : "");
+  if (cur && follow && selected !== cur.id && (selected === null || selected === wasRunning || runs.find(r => r.id === selected)?.status === "queued")) {
+    selected = cur.id; lastEventCount = -1;
+  }
+  if (cur?.id !== wasRunning) refreshRuns();
+  showSelected(false);
+  pollTimer = setTimeout(poll, cur ? 700 : 3000);
+}
+
+async function showSelected(force) {
+  if (!selected) return;
+  let m;
+  if (state?.current?.id === selected) m = state.current;
+  else {
+    if (!force && shownRun?.id === selected && ["done", "stopped", "error"].includes(shownRun.status)) return;
+    try { const r = await fetch("/api/run/" + encodeURIComponent(selected)); if (!r.ok) return; m = await r.json(); } catch { return; }
+  }
+  const fresh = force || shownRun?.id !== m.id || shownRun?.status !== m.status || shownRun?.kind !== m.kind;
+  shownRun = m;
+  m.kind === "video" ? renderVideo(m, fresh) : renderPhotos(m, fresh);
+}
+
+// ---------------- video run ----------------
+function runHeader(m) {
+  const btns = [];
+  if (m.status === "running" || m.status === "queued") btns.push(`<button class="btn small danger" onclick="stopRun()">Stop</button>`);
+  if (m.status !== "running" && m.status !== "queued") {
+    if (m.recording) btns.push(`<button class="btn small" onclick="openOnPC('${esc(m.id)}','recording')">▶ Play annotated video</button>`,
+      `<a class="btn small" style="text-decoration:none" href="/runs/${encodeURIComponent(m.id)}/annotated.mp4?download=1">Download video</a>`);
+    if (m.compare_recording) btns.push(`<button class="btn small" onclick="openOnPC('${esc(m.id)}','compare')">▶ Play side-by-side</button>`,
+      `<a class="btn small" style="text-decoration:none" href="/runs/${encodeURIComponent(m.id)}/compare.mp4?download=1">Download side-by-side</a>`);
+    btns.push(`<button class="btn small" onclick="openOnPC('${esc(m.id)}','folder')">Open folder</button>`);
+    btns.push(`<a class="btn small" style="text-decoration:none" href="/runs/${encodeURIComponent(m.id)}/plates.csv?download=1">Download CSV</a>`);
+  }
+  return `<div class="runhead"><h3>${esc(m.name)}</h3><span class="pill ${m.status}">${m.status}</span>
+    <span class="spacer"></span>${btns.join("")}</div>
+    ${m.error ? `<div class="section"><div class="msg err">${esc(m.error)}</div></div>` : ""}`;
+}
+let pairShown = false, clockTimer = null, lastStats = null, pollAt = 0;
+function updateClocks() {
+  const vid = $("#origVideo");
+  if (!vid) return;
+  $("#clockL").textContent = vid.currentTime.toFixed(1) + " s";
+  const st = lastStats, r = $("#clockR");
+  if (st && st.video_time_s != null && shownRun?.status === "running") {
+    const tR = st.video_time_s + (performance.now() - pollAt) / 1000;       // the result's clock, moved on since the last update
+    // the result can never be ahead of real time, so an original video that has fallen behind it (late start, buffering) is moved forward
+    if (tR - vid.currentTime > 0.6 && !vid.seeking && performance.now() - (vid.lastFix || 0) > 2500) {
+      vid.lastFix = performance.now();
+      try { vid.currentTime = tR + 0.2; } catch (e) {}
+      if (vid.paused) vid.play().catch(() => {});
+    }
+    const lag = Math.max(0, vid.currentTime - tR);
+    r.textContent = tR.toFixed(1) + " s" + (lag > 1 ? ` · ${lag.toFixed(1)} s behind` : "");
+    r.style.color = lag > 2 ? "var(--warn)" : "var(--good)";
+  } else r.textContent = "";
+}
+function renderVideo(m, fresh) {
+  const running = m.status === "running";
+  const base = `/runs/${encodeURIComponent(m.id)}/`;
+  const wantPair = !!m.preview;
+  const rebuilt = fresh || wantPair !== pairShown;
+  fresh = rebuilt;
+  if (rebuilt) {
+    pairShown = wantPair;
+    const viewerBox = `<div class="viewer ${m.fog_removal?.on && running ? "sbs" : ""}" id="viewer"></div>`;
+    $("#main").innerHTML = runHeader(m) + `
+      <div class="section"><div class="bar"><div id="prog"></div></div></div>
+      <div class="stats" id="stats"></div>
+      <div class="videogrid ${wantPair ? "paired" : ""}">
+        <div>
+          ${wantPair ? `<div class="pair">
+              <div class="vbox"><div class="vlabel"><b>Original video</b> · plays in real time<span class="clock" id="clockL"></span></div>
+                <div class="viewer"><video id="origVideo" muted playsinline preload="auto"></video></div></div>
+              <div class="vbox"><div class="vlabel"><b>Fog removed + plate reader</b> · live result<span class="clock" id="clockR"></span></div>
+                ${viewerBox}</div></div>` : viewerBox}
+          <div class="latest" id="latest"></div>
+        </div>
+        <div>
+          <div class="plist-head"><input type="search" id="filter" placeholder="Search plates…"><span class="chip" id="pcount"></span></div>
+          <ul class="plist" id="plist"></ul>
+        </div>
+      </div>
+      <div id="unconf"></div>`;
+    $("#filter").oninput = () => { lastEventCount = -1; renderVideo(shownRun, false); };
+    liveOn = false;
+  }
+  // viewer: live stream while running, otherwise a snapshot of the clicked plate
+  if (running && !liveOn) {
+    $("#viewer").innerHTML = `<img id="liveImg" alt="live view" src="/live.mjpg?t=${Date.now()}">`;
+    liveOn = true;
+  } else if (!running && (fresh || liveOn)) {
+    liveOn = false;
+    const last = m.events[m.events.length - 1];
+    $("#viewer").innerHTML = last?.snap ? `<img src="${base + last.snap}" alt="">` :
+      `<div class="ph">${m.status === "queued" ? "Waiting for the run before this one to finish…" : "No plates were confirmed in this video (the fog may be too dense for the reader)."}</div>`;
+  }
+  const v = m.video || {}, st = m.stats || {};
+  lastStats = st; pollAt = performance.now();
+  const vid = $("#origVideo");
+  if (vid) {                                   // the original video starts at the point the reader has reached, then plays on its own
+    if (!vid.getAttribute("src")) vid.src = base + m.preview;
+    if (running && st.video_time_s != null && !vid.dataset.started) {
+      vid.dataset.started = "1";
+      const go = () => { try { vid.currentTime = st.video_time_s + 0.3; } catch (e) {} vid.play().catch(() => {}); };
+      vid.readyState >= 1 ? go() : vid.addEventListener("loadedmetadata", go, { once: true });
+    }
+    vid.controls = !running;                   // a finished run: play and scrub it freely
+    if (!clockTimer) clockTimer = setInterval(updateClocks, 200);
+  } else if (clockTimer) { clearInterval(clockTimer); clockTimer = null; }
+  $("#prog").style.width = (100 * (m.progress || 0)).toFixed(1) + "%";
+  $("#stats").innerHTML = [
+    v.width && `<span>${v.width}×${v.height} · ${v.fps} fps${v.duration_s ? ` · ${v.duration_s} s long` : ""}</span>`,
+    st.video_time_s != null && `<span>Video time <b>${st.video_time_s.toFixed(1)} s</b></span>`,
+    st.fps != null && `<span>Processing <b>${st.fps}</b> frames/s</span>`,
+    st.skipped != null && m.settings.mode === "live" && `<span>Skipped to stay live <b>${st.skipped}</b></span>`,
+    v.yolo_imgsz && `<span>Detector ${v.yolo_imgsz}</span>`,
+    m.settings.dehaze !== false && `<span>Fog removal <b>${m.settings.strength || "strong"}</b></span>`,
+    m.settings.dehaze === false && `<span>Fog removal <b>off</b></span>`,
+    m.note && `<span><b>${esc(m.note)}</b></span>`,
+    `<span>${m.settings.mode === "live" ? "Live mode" : "Every frame"}</span>`,
+  ].filter(Boolean).join("");
+
+  const evs = m.events;
+  // latest plate banner (the "on display now" view)
+  const last = evs[evs.length - 1];
+  $("#latest").innerHTML = last ? `<div><div class="lbl">${running ? "Latest plate" : "Last plate"} · ${last.t.toFixed(1)} s</div>
+      <span class="plate">${esc(fmtPlate(last.plate))}</span></div>
+      ${last.crop ? `<img src="${base + last.crop}" alt="">` : ""}<div class="meta">${esc(plateInfo(last.plate).where)}</div>`
+    : `<div class="meta">${running ? "Waiting for the first plate…" : ""}</div>`;
+
+  if (evs.length !== lastEventCount || fresh || evs.some(e => e.corrected_from)) {
+    const q = ($("#filter")?.value || "").toUpperCase().replace(/\s+/g, "");
+    const list = evs.map((e, i) => ({ ...e, i })).filter(e => !q || e.plate.includes(q)).reverse();
+    $("#pcount").textContent = `${evs.length} plate${evs.length === 1 ? "" : "s"}`;
+    $("#plist").innerHTML = list.length ? list.map(e => {
+      const info = plateInfo(e.plate);
+      return `<li data-i="${e.i}" class="${lastEventCount >= 0 && e.i >= lastEventCount ? "fresh" : ""}">
+        ${e.crop ? `<img class="crop" src="${base + e.crop}?v=${m.status}" alt="">` : `<span></span>`}
+        <div><span class="plate">${esc(fmtPlate(e.plate))}</span>
+          <div class="meta">${e.t.toFixed(1)} s${info.where ? " · " + esc(info.where) : ""}</div>
+          ${info.unknown ? `<span class="tag bad">“${esc(info.unknown)}” is not an Indian state code: probably not a plate</span>` : ""}
+          ${e.corrected_from ? `<span class="tag info">corrected from ${esc(e.corrected_from)}</span>` : ""}
+        </div></li>`;
+    }).join("") : `<li style="cursor:default;color:var(--muted);display:block">${q ? "No plate matches." : running ? "Plates appear here as vehicles pass." : "No plates."}</li>`;
+    $("#plist").querySelectorAll("li[data-i]").forEach(li => li.onclick = () => openPlate(shownRun, +li.dataset.i));
+    lastEventCount = evs.length;
+  }
+
+  if (!running && m.status !== "queued" && fresh) {
+    const u = m.unconfirmed || [];
+    $("#unconf").innerHTML = `<div class="section"><h4>Tracked but not confirmed (${u.length})</h4>
+      <p>Plates the detector followed for at least 20 frames whose reading never got enough agreeing reads. Check these by eye: some are real vehicles the reader couldn't read, others are signs or stickers.</p>
+      ${u.length ? `<div class="ugrid">${u.map(x => `<div class="ucard"><img src="${base + x.crop}" alt="">
+        <div class="g">${esc(x.vote || "(no reading)")}</div>
+        <div class="meta">${x.first_s.toFixed(1)}–${x.last_s.toFixed(1)} s · ${x.frames} frames · ${x.w}×${x.h}px</div>
+        <div class="meta" title="most frequent readings">${esc(x.top)}</div></div>`).join("")}</div>`
+        : `<p>None. Every long-tracked plate was confirmed.</p>`}</div>`;
+  }
+}
+
+function openPlate(m, i) {
+  const e = m.events[i], base = `/runs/${encodeURIComponent(m.id)}/`, info = plateInfo(e.plate);
+  $("#modalBox").innerHTML = `${e.snap ? `<img src="${base + e.snap}" alt="frame">` : ""}
+    <div class="info">${e.crop ? `<img src="${base + e.crop}" alt="">` : ""}
+      <div><span class="plate">${esc(fmtPlate(e.plate))}</span>
+        <div class="meta">${e.t.toFixed(1)} s into the video · track ${e.track}${info.where ? " · " + esc(info.where) : ""}</div>
+        ${e.corrected_from ? `<span class="tag info">corrected from ${esc(e.corrected_from)}</span>` : ""}</div>
+      <span class="spacer" style="flex:1"></span>
+      <button class="btn small" onclick="navigator.clipboard?.writeText('${esc(e.plate)}')">Copy</button>
+      <button class="btn small" onclick="closeModal()">Close</button></div>`;
+  $("#modal").classList.add("open");
+}
+function closeModal() { $("#modal").classList.remove("open"); }
+$("#modal").onclick = e => { if (e.target.id === "modal") closeModal(); };
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+// ---------------- photo run ----------------
+function renderPhotos(m, fresh) {
+  const base = `/runs/${encodeURIComponent(m.id)}/`;
+  const n = m.photos.length;
+  if (!fresh && n === lastEventCount) return;
+  lastEventCount = n;
+  const plates = m.photos.reduce((s, p) => s + p.plates.filter(x => x.plate_like).length, 0);
+  $("#main").innerHTML = runHeader(m) + `
+    <div class="section"><div class="bar"><div style="width:${(100 * (m.progress || 0)).toFixed(1)}%"></div></div></div>
+    <div class="stats"><span><b>${n}</b> of ${m.sources.length} photos read</span><span><b>${plates}</b> plates</span></div>
+    <div class="pgrid">${m.photos.map(p => `<div class="pcard">
+      ${p.original && p.image ? `<div class="ba"><div><div class="bl">Original</div><img src="${base + p.original}" alt="" onclick="zoomImg('${base + p.original}')"></div>
+        <div><div class="bl">Fog removed · plates</div><img src="${base + p.image}" alt="" onclick="zoomImg('${base + p.image}')"></div></div>`
+        : (p.image ? `<img src="${base + p.image}" alt="" onclick="zoomImg('${base + p.image}')">` : "")}
+      <div class="nm">${esc(p.name)}${p.whole_image ? " · no plate found, read the whole photo as a plate" : ""}</div>
+      ${p.error ? `<div class="section"><div class="msg err">${esc(p.error)}</div></div>` : ""}
+      ${(() => {
+        const item = x => `<li class="${x.plate_like ? "" : "dim"}"><img src="${base + x.crop}" alt="">
+          <div><span class="plate" style="font-size:16px">${esc(fmtPlate(x.text))}</span>
+          <div class="meta">${x.plate_like ? esc(plateInfo(x.text).where) : "doesn't look like a plate"}${x.conf != null ? ` · detector ${x.conf}` : ""}</div>
+          ${x.plate_like && plateInfo(x.text).unknown ? `<span class="tag bad">“${esc(plateInfo(x.text).unknown)}” is not an Indian state code</span>` : ""}</div></li>`;
+        const good = p.plates.filter(x => x.plate_like), other = p.plates.filter(x => !x.plate_like);
+        return `<ul>${good.length ? good.map(item).join("") : `<li class="meta">${p.plates.length ? "No plate-like reading in this photo." : "No plate detected."}</li>`}</ul>`
+          + (other.length ? `<details class="others"><summary>${other.length} other detection${other.length > 1 ? "s" : ""} (did not read like plates)</summary><ul>${other.map(item).join("")}</ul></details>` : "");
+      })()}
+    </div>`).join("")}</div>`;
+}
+function zoomImg(src) {
+  $("#modalBox").innerHTML = `<img src="${src}" alt=""><div class="info"><span style="flex:1"></span><button class="btn small" onclick="closeModal()">Close</button></div>`;
+  $("#modal").classList.add("open");
+}
+
+// ---------------- actions ----------------
+async function stopRun() { await fetch("/api/stop", { method: "POST" }); poll(); }
+async function openOnPC(id, what) {
+  const r = await fetch("/api/open", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ run: id, what }) });
+  if (!r.ok) { const j = await r.json().catch(() => ({})); alert(j.error || "could not open"); }
+}
+
+refreshRuns().then(() => { if (!selected && runs.length) { selected = runs[0].id; follow = runs[0].status === "running"; refreshRuns(); } poll(); });
+</script>
+</body>
+</html>

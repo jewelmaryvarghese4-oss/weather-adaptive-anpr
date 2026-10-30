@@ -1,0 +1,117 @@
+%% ======================================================================
+%%  WEATHER ADAPTIVE ANPR SYSTEM  -  Project report (Phase 1)
+%%  Government Engineering College Barton Hill, Dept. of ECE, APJ AKTU
+%%
+%%  Compile with pdfLaTeX (Overleaf default).  Run:  pdflatex, bibtex,
+%%  pdflatex, pdflatex  (Overleaf does this automatically).
+%%
+%%  Edit names, dates and the guide / coordinator block in
+%%  chapters/00_frontmatter.tex.  Every chapter is its own file in
+%%  chapters/, every figure lives in figures/.
+%% ======================================================================
+\documentclass[12pt,a4paper]{report}
+
+% ---------- fonts and layout (follows the college reference reports) ----
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{mathptmx}
+\usepackage[scaled=.90]{helvet}
+\usepackage[a4paper,left=3.0cm,right=2.5cm,top=2.7cm,bottom=2.7cm]{geometry}
+\usepackage{setspace}
+\usepackage{microtype}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+
+% ---------- graphics, tables, maths -------------------------------------
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc,backgrounds}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+
+\graphicspath{{figures/}}
+
+% ---------- look and feel ------------------------------------------------
+\setstretch{1.25}
+\setlength{\parskip}{0pt}
+\setlength{\parindent}{1.2em}
+\setlist{itemsep=2pt,topsep=4pt,parsep=0pt}
+\captionsetup{font=small,labelfont=bf,skip=6pt}
+\renewcommand{\arraystretch}{1.15}
+\setlength{\emergencystretch}{2em}
+
+\titleformat{\chapter}[display]
+  {\sffamily\bfseries}{\Large\chaptertitlename\ \thechapter}{14pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{10pt}{26pt}
+\titleformat{\section}{\sffamily\bfseries\Large}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\sffamily\bfseries\large}{\thesubsection}{0.8em}{}
+\titleformat{\subsubsection}{\sffamily\bfseries\normalsize}{\thesubsubsection}{0.8em}{}
+
+\pagestyle{plain}
+\setcounter{tocdepth}{3}
+\setcounter{secnumdepth}{3}
+
+% ---------- colours / tikz styles for the block diagrams ----------------
+\definecolor{blk}{RGB}{31,78,121}
+\definecolor{blkfill}{RGB}{222,234,246}
+\definecolor{grnfill}{RGB}{226,240,217}
+\definecolor{orgfill}{RGB}{252,235,214}
+\definecolor{gryfill}{RGB}{238,238,238}
+\tikzset{
+  blk/.style={draw=blk,fill=blkfill,rounded corners=2pt,align=center,
+              minimum height=9mm,minimum width=22mm,inner sep=3pt,
+              font=\sffamily\footnotesize},
+  grn/.style={blk,fill=grnfill},
+  org/.style={blk,fill=orgfill},
+  gry/.style={blk,fill=gryfill},
+  arr/.style={-{Stealth[length=2.2mm]},thick,draw=blk},
+  lbl/.style={font=\sffamily\scriptsize,align=center}
+}
+
+% ---------- small helpers ------------------------------------------------
+\newcommand{\ie}{\textit{i.e.}}
+\newcommand{\eg}{\textit{e.g.}}
+\newcommand{\etal}{\textit{et al.}}
+\newcommand{\code}[1]{{\small\texttt{#1}}}
+\newcommand{\plate}[1]{\texttt{#1}}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+
+% ---------- report data (edit here) --------------------------------------
+\newcommand{\ReportTitle}{WEATHER ADAPTIVE ANPR SYSTEM}
+\newcommand{\ReportTitleCase}{Weather Adaptive ANPR System}
+\newcommand{\ReportDate}{October 2026}
+\newcommand{\AcademicYear}{2026 -- 27}
+\newcommand{\DeclarationDate}{\ \ -10-2026}
+
+\begin{document}
+
+\input{chapters/00_frontmatter}
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\input{chapters/01_introduction}
+\input{chapters/02_literature}
+\input{chapters/03_system_design}
+\input{chapters/04_phase1}
+\input{chapters/05_phase2_plan}
+\input{chapters/06_conclusion}
+
+\bibliographystyle{IEEEtran}
+\addcontentsline{toc}{chapter}{References}
+\bibliography{references}
+
+\appendix
+\input{chapters/07_appendix}
+
+\end{document}
